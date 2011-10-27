@@ -31,6 +31,7 @@
 #include "RooPolynomial.h"
 #include "RooDataSet.h"
 #include "RooWorkspace.h"
+#include "RooFitResult.h"
 
 using namespace std;
 using namespace RooFit;
@@ -342,9 +343,15 @@ int main(int argc, char* argv[]){
       */
 
       for (int i=0; i<12; i++){
-          RooGenericPdf datFitFunc = getFunction(fcnNames[i]);
-          datFitFunc.fitTo(*hMassData);
-          Plot(mass,hMassData,datFitFunc,mMC,cat,itToy,fitFunc,genFunc);
+        RooGenericPdf datFitFunc = getFunction(fcnNames[i]);
+        datFitFunc.fitTo(*hMassData,PrintEvalErrors(-1));
+        /*
+        RooAbsReal *resultNLL = datFitFunc.createNLL(*hMassData);
+        cout << resultNLL->getVal() << endl;
+        RooAbsReal *resultChi2 = datFitFunc.createChi2(*hMassData);
+        cout << resultChi2->getVal() << endl;
+        */
+        Plot(mass,hMassData,datFitFunc,mMC,cat,itToy,fitFunc,genFunc);
       }
 
       
