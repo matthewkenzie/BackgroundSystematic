@@ -51,28 +51,28 @@ RooRealVar *mass = (RooRealVar*)dataWS->var("CMS_hgg_mass");
   RooGenericPdf sin_exp("sin_exp","sin_exp","exp(@1*@0)",RooArgSet(*mass,exp0_p0));
   //RooExponential sin_exp("sin_exp","sin_exp",*mass,exp_p0);
   // double exp
-  RooRealVar exp1_p0("exp1_p0","exp1_p0",-0.58,-1.,0.);
-  RooRealVar exp1_p1("exp1_p1","exp1_p1",0.0528,-0.5,0.5); //find starting vals
-  RooRealVar exp1_p2("exp1_p2","exp1_p2",-0.02137,-1.,0.); //find starting vals
+  RooRealVar exp1_p0("exp1_p0","exp1_p0",-0.,-1.,0.);
+  RooRealVar exp1_p1("exp1_p1","exp1_p1",0.,-0.5,0.5); //find starting vals
+  RooRealVar exp1_p2("exp1_p2","exp1_p2",-0.,-1.,0.); //find starting vals
  // RooExponential temp_dbl_exp("temp_dbl_exp","temp_dbl_exp",*mass,exp_p2);
   RooGenericPdf dbl_exp("dbl_exp","dbl_exp","exp(@1*@0)+@2*exp(@3*@0)",RooArgSet(*mass,exp1_p0,exp1_p1,exp1_p2));
   // triple exp
-  RooRealVar exp2_p0("exp2_p0","exp2_p0",-0.839,-1.,0.);
-  RooRealVar exp2_p1("exp2_p1","exp2_p1",0.140,-1.,1.); //find starting vals
-  RooRealVar exp2_p2("exp2_p2","exp2_p2",-0.0832,-1.,0.); //find starting vals
-  RooRealVar exp2_p3("exp2_p3","exp2_p3",0.0560,-0.5,0.5); //find starting vals
-  RooRealVar exp2_p4("exp2_p4","exp2_p4",-0.02657,-1.,0.); //find starting vals
+  RooRealVar exp2_p0("exp2_p0","exp2_p0",-0.,-1.,0.);
+  RooRealVar exp2_p1("exp2_p1","exp2_p1",0.,-1.,1.); //find starting vals
+  RooRealVar exp2_p2("exp2_p2","exp2_p2",-0.,-1.,0.); //find starting vals
+  RooRealVar exp2_p3("exp2_p3","exp2_p3",0.,-0.5,0.5); //find starting vals
+  RooRealVar exp2_p4("exp2_p4","exp2_p4",-0.,-1.,0.); //find starting vals
   RooGenericPdf trip_exp("trip_exp","trip_exp","exp(@1*@0)+@2*exp(@3*@0)+@4*exp(@5*@0)",RooArgSet(*mass,exp2_p0,exp2_p1,exp2_p2,exp2_p3,exp2_p4));
   // single pow
-  RooRealVar pl0_p0("pl0_p0","pl0_p0",-3.82,-10.,0.);
+  RooRealVar pl0_p0("pl0_p0","pl0_p0",-0.,-10.,0.);
   RooGenericPdf sin_pow("sin_pow","sin_pow","pow(@0,@1)",RooArgSet(*mass,pl0_p0));
   // double pow
-  RooRealVar pl1_p0("pl1_p0","pl1_p0",-3.82,-10.,0.);
-  RooRealVar pl1_p1("pl1_p1","pl1_p1",0.1,-2.,2.);
-  RooRealVar pl1_p2("pl1_p2","pl1_p2",-4.0,-10.,0.);
+  RooRealVar pl1_p0("pl1_p0","pl1_p0",-0.,-10.,0.);
+  RooRealVar pl1_p1("pl1_p1","pl1_p1",0.,-2.,2.);
+  RooRealVar pl1_p2("pl1_p2","pl1_p2",.0,-10.,0.);
   RooGenericPdf dbl_pow("dbl_pow","dbl_pow","pow(@0,@1)+@2*pow(@0,@3)",RooArgSet(*mass,pl1_p0,pl1_p1,pl1_p2));
   // triple pow
-  RooRealVar pl2_p0("pl2_p0","pl2_p0",-4.86,-10.,0.);
+  RooRealVar pl2_p0("pl2_p0","pl2_p0",-0.,-10.,0.);
   RooRealVar pl2_p1("pl2_p1","pl2_p1",-0.,-2.,2.);
   RooRealVar pl2_p2("pl2_p2","pl2_p2",0.,-10.,10.);
   RooRealVar pl2_p3("pl2_p3","pl2_p3",0.,-0.1,0.1);
@@ -87,11 +87,11 @@ RooRealVar *mass = (RooRealVar*)dataWS->var("CMS_hgg_mass");
   RooRealVar lau1_p2("lau1_p2","lau1_p2",0.03,-10.,10.);
   RooGenericPdf four_lau("four_lau","four_lau","pow(@0,-4.0)+@1*pow(@0,-5.0)+@2*pow(@0,-3.0)+@3*pow(@0,-6.0)",RooArgSet(*mass,lau1_p0,lau1_p1,lau1_p2));
   // six term laurent
-  RooRealVar lau2_p0("lau2_p0","lau2_p0",0.171,-10.,10.);
-  RooRealVar lau2_p1("lau2_p1","lau2_p1",0.287,-10.,10.);
-  RooRealVar lau2_p2("lau2_p2","lau2_p2",0.00294,-10.,10.);
-  RooRealVar lau2_p3("lau2_p3","lau2_p3",0.0104,-10.,10.);
-  RooRealVar lau2_p4("lau2_p4","lau2_p4",0.0004,-10.,10.);
+  RooRealVar lau2_p0("lau2_p0","lau2_p0",0.,-10.,10.);
+  RooRealVar lau2_p1("lau2_p1","lau2_p1",0.,-10.,10.);
+  RooRealVar lau2_p2("lau2_p2","lau2_p2",0.,-10.,10.);
+  RooRealVar lau2_p3("lau2_p3","lau2_p3",0.,-10.,10.);
+  RooRealVar lau2_p4("lau2_p4","lau2_p4",0.,-10.,10.);
   RooGenericPdf six_lau("six_lau","six_lau","pow(@0,-4.0)+@1*pow(@0,-5.0)+@2*pow(@0,-3.0)+@3*pow(@0,-6.0)+@4*pow(@0,-2.0)+@5*pow(@0,-7.0)",RooArgSet(*mass,lau2_p0,lau2_p1,lau2_p2,lau2_p3,lau2_p4));
   // single poly
   RooRealVar pol0_p0("pol0_p0","pol0_p0",-0.001,-0.05,0.);
