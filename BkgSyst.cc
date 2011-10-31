@@ -32,6 +32,8 @@
 #include "RooDataSet.h"
 #include "RooWorkspace.h"
 #include "RooFitResult.h"
+#include "RooChi2Var.h"
+#include "RooNLLVar.h"
 
 using namespace std;
 using namespace RooFit;
@@ -348,6 +350,7 @@ int main(int argc, char* argv[]){
     checkInput(fitFunc);
     checkInput(genFunc);
     ofstream diagFile("diags.txt");
+    ofstream fitResFile("fitResults.txt");
     const int nToys=atoi(argv[4]);
     const int cat=atoi(argv[5]) ;
     const int nMasses=9;
@@ -370,6 +373,9 @@ int main(int argc, char* argv[]){
     TH1F *posBkgNormHist[nMasses];
     TH2F *posBkgSigNormCorr[nMasses];
     TH1F *bdtBkgNormHist[nMasses];
+
+    std::vector<std::pair<string,double> > chi2fitResults;
+    std::vector<std::pair<string,double> > NLLfitResults;
 
     //for (int cat=0; cat<nCats; cat++){
       int mIt=0;
@@ -421,7 +427,7 @@ int main(int argc, char* argv[]){
           double bkgIntegral = wholeInt_dataFitFcn->getVal()*hMassData->numEntries();
           
           // let signal go pos and neg
-          int sigYieldMin;
+          double sigYieldMin;
           if (sigOption==0) sigYieldMin==-50;
           if (sigOption==1) sigYieldMin==0;
 
@@ -432,11 +438,21 @@ int main(int argc, char* argv[]){
             // get background func
             RooGenericPdf genFitFcn = getFunction(genFunc); //getPow(0);
             // --- contruct s+b model and fit allowing signal to go negative
-            RooRealVar bkgYield("nBkg","nBkg",2000,1000,2500);
-            RooRealVar sigYield("nSig","nSig",0,sigYieldMin,50);
+            RooRealVar bkgYield("nBkg","nBkg",2000.,1000.,2500.);
+            RooRealVar sigYield("nSig","nSig",0.,sigYieldMin,50.);
             RooAddPdf sigAndBkg(Form("sigAndBkg%d",mMC),Form("sigAndBkg%d",mMC),RooArgList(genFitFcn,sigMC),RooArgList(bkgYield,sigYield));
-            sigAndBkg.fitTo(*genDat,PrintLevel(-1));
-            compWS->import(sigAndBkg,PrintLevel(-1));
+            sigAndBkg.fitTo(*genDat,PrintLevel(-1),PrintEvalErrors(-1));
+            compWS->import(sigAndBkg);
+            RooDataHist *dh = genDat->binnedClone();
+            RooChi2Var chi2_sigBkg("chi2_sigBkg","chi2_sigBkg",sigAndBkg,*dh);
+            RooNLLVar nll_sigBkg("nll_sigBkg","nll_sigBkg",sigAndBkg,*dh);
+            string temp1(sigAndBkg.GetName());
+            double temp2(chi2_sigBkg.getVal());
+            double temp4(nll_sigBkg.getVal());
+            pair<string,double> temp3(temp1,temp2);
+            pair<string,double> temp5(temp1,temp4);
+            chi2fitResults.push_back(temp3);
+            NLLfitResults.push_back(temp5);
             
             // --- calc integrals in window and across whole range for checking.
             double lowBand = 0.95*double(mMC);
@@ -552,6 +568,9 @@ int main(int argc, char* argv[]){
    // }
     outFile->Close();
     diagFile.close();
+    for (int i=0; i<chi2fitResults.size(); i++){
+      fitResFile << chi2fitResults.at(i).first << " " << chi2fitResults.at(i).second << " " << NLLfitResults.at(i).second << endl;
+    }
   }
   inFile->Close();
 
