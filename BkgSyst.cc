@@ -36,9 +36,8 @@
 using namespace std;
 using namespace RooFit;
 
-// in and out files
+// in file
 TFile *inFile = new TFile("CMS-HGG_1665pb.root");
-TFile *outFile = new TFile("BkgSystOut.root","RECREATE");
 
 // get workspace and mass data
 RooWorkspace *dataWS = (RooWorkspace*)inFile->Get("cms_hgg_workspace");
@@ -195,13 +194,27 @@ void Plot(RooRealVar *mass, RooDataSet* hMassData, RooGenericPdf dataFitFcn, int
   hMassData->plotOn(mFrame,DataError(RooDataSet::SumW2));
   dataFitFcn.plotOn(mFrame);
   mFrame->Draw();
-  canv->Print(Form("plots/test/Fit_%s_cat%d.pdf",dataFitFcn.GetName(),cat),"pdf");
-  //canv->Print(Form("plots/%s/%s/Fit_%s_cat%d.pdf",fitFuncName.c_str(),genFuncName.c_str(),dataFitFcn.GetName(),cat),"pdf");
+  //canv->Print(Form("plots/test/Fit_%s_cat%d.pdf",dataFitFcn.GetName(),cat),"pdf");
+  canv->Print(Form("plots/%s/%s/Fit_%s_cat%d.pdf",fitFuncName.c_str(),genFuncName.c_str(),dataFitFcn.GetName(),cat),"pdf");
   canv->Clear();
   delete canv;
 }
 
-void Plot(RooRealVar *mass, RooDataSet* hMassData, RooExponential dataFitFcn, int MCmass, int cat, int toy, string fitFuncName, string genFuncName){
+void Plot(RooRealVar *mass, RooDataSet* hMassData, RooGenericPdf dataFitFcn, int cat, string fitFuncName){
+  
+  system("mkdir -p plots/Fits");
+  TCanvas *canv = new TCanvas();
+
+  RooPlot *mFrame = mass->frame(Title(Form("Fit of %s to data cat %d",dataFitFcn.GetName(),cat)));
+  hMassData->plotOn(mFrame,DataError(RooDataSet::SumW2));
+  dataFitFcn.plotOn(mFrame);
+  mFrame->Draw();
+  canv->Print(Form("plots/Fits/Fit_%s_cat%d.pdf",dataFitFcn.GetName(),cat),"pdf");
+  canv->Clear();
+  delete canv;
+}
+
+void Plot(RooRealVar *mass, RooDataSet* hMassData, RooGenericPdf dataFitFcn, RooDataSet* genDat, RooAddPdf sigAndBkg, RooAddPdf posSigAndBkg, RooGenericPdf genFitFcn, int MCmass, int cat, int toy, string fitFuncName, string genFuncName){
  
   TCanvas *canv = new TCanvas();
 
@@ -209,11 +222,17 @@ void Plot(RooRealVar *mass, RooDataSet* hMassData, RooExponential dataFitFcn, in
   hMassData->plotOn(mFrame,DataError(RooDataSet::SumW2));
   dataFitFcn.plotOn(mFrame);
   mFrame->Draw();
-  canv->Print(Form("plots/test/Fit_%s_cat%d.pdf",dataFitFcn.GetName(),cat),"pdf");
-  //canv->Print(Form("plots/%s/%s/Fit_%s_cat%d.pdf",fitFuncName.c_str(),genFuncName.c_str(),dataFitFcn.GetName(),cat),"pdf");
+  //canv->Print(Form("plots/test/Fit_%s_cat%d.pdf",dataFitFcn.GetName(),cat),"pdf");
+  canv->Print(Form("plots/%s/%s/Fit_%s_cat%d.pdf",fitFuncName.c_str(),genFuncName.c_str(),dataFitFcn.GetName(),cat),"pdf");
   canv->Clear();
 
-  /*
+  RooPlot *bFrame = mass->frame(Title(Form("Gen data from %s fitted outside sig window with %s at M %d in cat %d toy %d",dataFitFcn.GetName(), genFitFcn.GetName(),MCmass,cat,toy)));
+  genDat->plotOn(bFrame,DataError(RooDataSet::SumW2));
+  genFitFcn.plotOn(bFrame);
+  bFrame->Draw();
+  canv->Print(Form("plots/%s/%s/Gen_bdt_%s_fit_%s_m%d_cat%d_toy%d.pdf",fitFuncName.c_str(),genFuncName.c_str(),dataFitFcn.GetName(),genFitFcn.GetName(),MCmass,cat,toy),"pdf");
+  canv->Clear();
+
   RooPlot *gFrame = mass->frame(Title(Form("Gen data from %s fitted with %s plus signal at M %d in cat %d toy %d",dataFitFcn.GetName(),genFitFcn.GetName(),MCmass,cat,toy)));
   genDat->plotOn(gFrame,DataError(RooDataSet::SumW2));
   sigAndBkg.plotOn(gFrame);
@@ -226,7 +245,6 @@ void Plot(RooRealVar *mass, RooDataSet* hMassData, RooExponential dataFitFcn, in
   posSigAndBkg.plotOn(pFrame);
   pFrame->Draw();
   canv->Print(Form("plots/%s/%s/pos_Gen_%s_fit_%s_m%d_cat%d_toy%d.pdf",fitFuncName.c_str(),genFuncName.c_str(),dataFitFcn.GetName(),genFitFcn.GetName(),MCmass,cat,toy),"pdf");
-  */
 
   delete canv;
 }
@@ -267,6 +285,9 @@ int main(int argc, char* argv[]){
   checkInput(fitFunc);
   checkInput(genFunc);
 
+  bool justFits=true;
+  
+  TFile *outFile = new TFile(Form("BkgSystOut_%s_%s.root",fitFunc.c_str(),genFunc.c_str()),"RECREATE");
   string fcnNames[12] = {"sin_exp","dbl_exp","trip_exp","sin_pow","dbl_pow","trip_pow","two_lau","four_lau","six_lau","sin_pol","dbl_pol","trip_pol"};
   for (int n1=0; n1<12; n1++){
     for (int n2=0; n2<12; n2++){
@@ -313,60 +334,122 @@ int main(int argc, char* argv[]){
     }
   }
 
-  diagFile << setw(6) << "Mass" << setw(6) << "Cat" << setw(10) << "datNevt" << setw(10) << "datFitInt" << setw(10) << "genNevt" << setw(10) << "genFitInt" << setw(10) << "sigNorm" << setw(10) << "sigYield" << setw(10) << "bkgNmFit" << setw(10) << "bkgNmGen" << setw(10) << "bkgDiff" << setw(10) << "s+bNorm" << setw(10) << "+sigN" << setw(10) << "+bkgN" << endl;
+  diagFile << setw(6) << "Mass" << setw(6) << "Cat" << setw(10) << "datNevt" << setw(10) << "datFitInt" << setw(10) << "genNevt" << setw(10) << "genFitInt" << setw(10) << "sigNorm" << setw(10) << "sigYield" << setw(10) << "bkgNmFit" << setw(10) << "bkgNmGen" << setw(10) << "bkgDiff" << setw(10) << "s+bNorm" << setw(10) << "+sigN" << setw(10) << "+bkgN" << setw(10) << "bdtBkgN" << endl;
+
     for (int cat=0; cat<nCats; cat++){
       cerr << "Category " << cat << " of " << nCats << endl;
-
-      int mMC=120;
-      int itToy=0;
-      int mIt=0;
+      
       // Get data for each cat and fit with function
       RooDataSet *hMassData = (RooDataSet*)dataWS->data(Form("data_mass_cat%d",cat));
-      //RooAddPdf dataFitFcn = getFunction(fitFunc); //getExp(0);
-      //dataFitFcn.fitTo(*hMassData);
-      /*
-      sin_exp.fitTo(*hMassData);
-      Plot(mass,hMassData,sin_exp,mMC,cat,itToy,fitFunc,genFunc);
-      double e0p0 = exp0_p0.getVal();
-      dbl_exp.fitTo(*hMassData);
-      Plot(mass,hMassData,dbl_exp,mMC,cat,itToy,fitFunc,genFunc);
-      double e1p0 = exp1_p0.getVal();
-      double e1p1 = exp1_p1.getVal();
-      double e1p2 = exp1_p2.getVal();
-      trip_exp.fitTo(*hMassData);
-      Plot(mass,hMassData,trip_exp,mMC,cat,itToy,fitFunc,genFunc);
-      double e2p0 = exp2_p0.getVal();
-      double e2p1 = exp2_p1.getVal();
-      double e2p2 = exp2_p2.getVal();
-      double e2p3 = exp2_p3.getVal();
-      double e2p4 = exp2_p4.getVal();
-      */
-
-      for (int i=0; i<12; i++){
-        RooGenericPdf datFitFunc = getFunction(fcnNames[i]);
-        datFitFunc.fitTo(*hMassData,PrintEvalErrors(-1));
-        /*
-        RooAbsReal *resultNLL = datFitFunc.createNLL(*hMassData);
-        cout << resultNLL->getVal() << endl;
-        RooAbsReal *resultChi2 = datFitFunc.createChi2(*hMassData);
-        cout << resultChi2->getVal() << endl;
-        */
-        Plot(mass,hMassData,datFitFunc,mMC,cat,itToy,fitFunc,genFunc);
+      if (justFits){
+        for (int itFits=0; itFits<12; itFits++){
+          RooGenericPdf fitFcn = getFunction(fcnNames[itFits]);
+          fitFcn.fitTo(*hMassData,Level(-1));
+          Plot(mass,hMassData,fitFcn,cat,fitFunc);
+        }
       }
+      else {
+        RooGenericPdf dataFitFcn = getFunction(fitFunc);
+        dataFitFcn.fitTo(*hMassData,PrintEvalErrors(-1));
+        outFile->cd();
+        hMassData->Write();
+        dataFitFcn.Write();
 
-      
-      //RooAbsReal *chi2result = sin_exp.createChi2(*mass);
-      //cerr << chi2result->getVal() << endl;
-     
-      /*
-      cout << setw(15) << "Fit" << setw(15) << "p0" << setw(15) << "p1" << setw(15) << "p2" << setw(15) << "p3" << setw(15) << "p4" << endl;
-      cout << setw(15) << "e0" << setw(15) << e0p0 << endl;
-      cout << setw(15) << "e1" << setw(15) << e1p0 << setw(15) << e1p1 << setw(15) << e1p2 << endl;
-      cout << setw(15) << "e2" << setw(15) << e2p0 << setw(15) << e2p1 << setw(15) << e2p2 << setw(15) << e2p3 << setw(15) << e2p4 << endl;
-      */
-      
+        
+        // generate toy data from this
+        for (int itToy=0; itToy<nToys; itToy++){
+          if (nToys>1 && itToy%(nToys/10)==0) cerr << Form("%2.0f %% of toys thown",100*double(itToy)/double(nToys)) << endl;
+          RooDataSet *genDat = dataFitFcn.generate(*mass,hMassData->numEntries(),Extended());
+
+          int mIt=0; 
+          for (int mMC=mRlow; mMC<=mRhigh; mMC+=5){
+            if (mMC==145) continue;
+            // define sig region
+            double lowBand = 0.95*double(mMC);
+            double highBand = 1.05*double(mMC);
+            double lowBDTBand = 0.93*double(mMC);
+            double highBDTBand = 1.07*double(mMC);
+            RooRealVar intRange(*mass);
+            intRange.setRange("sigWindow",lowBand,highBand);
+            RooRealVar wholeRange(*mass);
+            wholeRange.setRange("wholeRange",100,160);
+            RooRealVar sidebandRange(*mass);
+            sidebandRange.setRange("bdtWindow",lowBDTBand,highBDTBand);
+            RooRealVar lowRange(*mass);
+            RooRealVar highRange(*mass);
+            lowRange.setRange("lowRange",100,lowBDTBand);
+            highRange.setRange("highRange",highBDTBand,160);
+
+            // find norm of bkg in sig region
+            RooAbsReal* int_dataFitFcn = dataFitFcn.createIntegral(*mass,NormSet(*mass),Range("sigWindow"));
+            double bkgFitInt = int_dataFitFcn->getVal()*hMassData->numEntries();
+            RooAbsReal* wholeInt_dataFitFcn = dataFitFcn.createIntegral(*mass,NormSet(*mass),Range("wholeRange"));
+            double bkgIntegral = wholeInt_dataFitFcn->getVal()*hMassData->numEntries();
+            RooAbsReal* intBDT_dataFitFcn = dataFitFcn.createIntegral(*mass,NormSet(*mass),Range("bdtWindow"));
+            double bdtBkgIntegral = intBDT_dataFitFcn->getVal()*hMassData->numEntries();
+
+            // get signal MC histo
+            RooDataHist *sigMCHist = (RooDataHist*)dataWS->data(Form("roohist_sig_mass_m%d_cat%d",mMC,cat));
+            RooGenericPdf genFitFcn = getFunction(genFunc); //getPow(0);
+            genFitFcn.fitTo(*genDat,Range("lowRange","highRange"),PrintEvalErrors(-1));
+            RooHistPdf sigMC("sigMC","sigMC",*mass,*sigMCHist);
+            RooAbsReal* int_winGenFitFcn = genFitFcn.createIntegral(*mass,NormSet(*mass),Range("bdtWindow"));
+            double bdtGenBkgIntegral = int_winGenFitFcn->getVal()*genDat->numEntries();
+            double bdtWinDiff = bdtGenBkgIntegral-bkgFitInt;
+
+            // --- contruct s+b model and fit allowing signal to go negative
+            RooRealVar bkgYield("nBkg","nBkg",1001,500,2500);
+            RooRealVar sigYield("nSig","nSig",1,-50,50);
+            RooAddPdf sigAndBkg(Form("sigAndBkg%d",mMC),Form("sigAndBkg%d",mMC),RooArgList(genFitFcn,sigMC),RooArgList(bkgYield,sigYield));
+            sigAndBkg.fitTo(*genDat,Level(-1));
+            RooAbsReal* int_genFitFcn = genFitFcn.createIntegral(*mass,NormSet(*mass),Range("sigWindow"));
+            double bkgGenInt = (int_genFitFcn->getVal()*bkgYield.getVal());
+            RooAbsReal* int_sigMC = sigMC.createIntegral(*mass,NormSet(*mass),Range("sigWindow"));
+            double sigInt = (int_sigMC->getVal()*sigYield.getVal());
+            RooAbsReal* wholeInt_sigAndBkg = sigAndBkg.createIntegral(*mass,NormSet(*mass),Range("wholeRange"));
+            double sandbIntegral = wholeInt_sigAndBkg->getVal()*genDat->numEntries();
+            RooAbsReal* windowInt_sigAndBkg = sigAndBkg.createIntegral(*mass,NormSet(*mass),Range("sigWindow"));
+            double sandbWinIntegral = windowInt_sigAndBkg->getVal()*genDat->numEntries();
+            double bkgDiff = bkgGenInt-bkgFitInt;
+            // -------------------------------------------------------------------------
+            // --- contruct s+b model and fit forcing signal to be >=0
+            RooRealVar posSigYield("nSigPos","nSigPos",10.,0.,50.);
+            RooAddPdf posSigAndBkg(Form("posSigAndBkg%d",mMC),Form("posSigAndBkg%d",mMC),RooArgList(genFitFcn,sigMC),RooArgList(bkgYield,posSigYield));
+            posSigAndBkg.fitTo(*genDat,PrintLevel(-1));
+            RooAbsReal* int_posGenFitFcn = genFitFcn.createIntegral(*mass,NormSet(*mass),Range("sigWindow"));
+            double posBkgGenInt = int_posGenFitFcn->getVal()*bkgYield.getVal();
+            RooAbsReal* int_posSigMC = sigMC.createIntegral(*mass,NormSet(*mass),Range("sigWindow"));
+            double posSigInt = int_posSigMC->getVal()*sigYield.getVal();
+            double posBkgDiff = posBkgGenInt-bkgFitInt;
+            // -------------------------------------------------------------------------
+
+            // --- print to diagnostic file -------
+            diagFile << setw(6) << mMC << setw(6) << cat << setw(10) << hMassData->numEntries() << setw(10) << bkgIntegral << setw(10) << genDat->numEntries() << setw(10) << sandbIntegral << setw(10) << sigInt << setw(10) << sigYield.getVal() << setw(10) << bkgFitInt << setw(10) << bkgGenInt << setw(10) << bkgDiff << setw(10) << sandbWinIntegral << setw(10) << posSigInt << setw(10) << posBkgGenInt << setw(10) << posBkgDiff << setw(10) << bdtWinDiff << endl;
+            // -----------------------------------
+
+            sigNormHist[mIt][cat]->Fill(sigInt);
+            bkgNormHist[mIt][cat]->Fill(bkgDiff);
+            bkgSigNormCorr[mIt][cat]->Fill(sigInt,bkgDiff);
+            posSigNormHist[mIt][cat]->Fill(posSigInt);
+            posBkgNormHist[mIt][cat]->Fill(posBkgDiff);
+            posBkgSigNormCorr[mIt][cat]->Fill(posSigInt,posBkgDiff);
+
+            if (itToy==nToys-1) {
+              Plot(mass,hMassData,dataFitFcn,genDat,sigAndBkg,posSigAndBkg,genFitFcn,mMC,cat,itToy,fitFunc,genFunc);
+              outFile->cd();
+              genDat->Write();
+              sigAndBkg.Write();
+              posSigAndBkg.Write();
+            }
+          mIt++;
+          }
+        }
+      }
+          
+      int mIt=0;
       for (int mMC=mRlow; mMC<=mRhigh; mMC+=5){
         if (mMC==145) continue;
+          
         histPlot(sigNormHist[mIt][cat],fitFunc,genFunc);
         histPlot(bkgNormHist[mIt][cat],fitFunc,genFunc);
         histPlot(bkgSigNormCorr[mIt][cat],fitFunc,genFunc);
