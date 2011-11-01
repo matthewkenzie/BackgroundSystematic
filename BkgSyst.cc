@@ -49,8 +49,6 @@ RooWorkspace *dataWS = (RooWorkspace*)inFile->Get("cms_hgg_workspace");
 RooRealVar *mass = (RooRealVar*)dataWS->var("CMS_hgg_mass");
 
 // -------------- Global fit parameters ----------------------
-  // dummy varaible for 1
-  RooRealVar dumY("dumY","dumY",1.0,1.0,1.0);
   // single exp
   RooRealVar exp0_p0("exp0_p0","exp0_p0",-0.01,-10.,0.);
   RooGenericPdf sin_exp("sin_exp","sin_exp","exp(@1*@0)",RooArgSet(*mass,exp0_p0));
@@ -193,14 +191,14 @@ RooGenericPdf getFunction(string name){
 // ----------- plotting functions ---------------------------
 void Plot(RooRealVar *mass, RooDataSet* hMassData, RooGenericPdf *dataFitFcn, int cat){
  
-  system("mkdir -p plots/Fits");
+  system("mkdir -p Newplots/Fits");
   TCanvas *canv = new TCanvas();
 
   RooPlot *mFrame = mass->frame(Title(Form("Fit of %s to data cat %d",dataFitFcn->GetName(),cat)));
   hMassData->plotOn(mFrame,DataError(RooDataSet::SumW2));
   dataFitFcn->plotOn(mFrame);
   mFrame->Draw();
-  canv->Print(Form("plots/Fits/Fit_%s_cat%d.pdf",dataFitFcn->GetName(),cat),"pdf");
+  canv->Print(Form("Newplots/Fits/Fit_%s_cat%d.pdf",dataFitFcn->GetName(),cat),"pdf");
   canv->Clear();
   delete canv;
 }
@@ -208,13 +206,14 @@ void Plot(RooRealVar *mass, RooDataSet* hMassData, RooGenericPdf *dataFitFcn, in
 void Plot(RooRealVar *mass, RooDataSet* genDat, RooAddPdf sigAndBkg, RooGenericPdf genFitFcn, int MCmass, int cat, int toy, string fitFuncName, string genFuncName,int sigOption){
  
   string temp[2]={"","pos"};
+  system("mkdir -p Newplots/Fits");
   TCanvas *canv = new TCanvas();
 
   RooPlot *gFrame = mass->frame(Title(Form("Gen data from %s fitted with %s plus %s signal at M %d in cat %d toy %d",fitFuncName.c_str(),genFuncName.c_str(),temp[sigOption].c_str(),MCmass,cat,toy)));
   genDat->plotOn(gFrame,DataError(RooDataSet::SumW2));
   sigAndBkg.plotOn(gFrame);
   gFrame->Draw();
-  canv->Print(Form("plots/%s/%s/%sGen_%s_fit_%s_m%d_cat%d_toy%d.pdf",fitFuncName.c_str(),genFuncName.c_str(),temp[sigOption].c_str(),fitFuncName.c_str(),genFuncName.c_str(),MCmass,cat,toy),"pdf");
+  canv->Print(Form("Newplots/%s/%s/%sGen_%s_fit_%s_m%d_cat%d_toy%d.pdf",fitFuncName.c_str(),genFuncName.c_str(),temp[sigOption].c_str(),fitFuncName.c_str(),genFuncName.c_str(),MCmass,cat,toy),"pdf");
   canv->Clear();
 
   delete canv;
@@ -222,6 +221,7 @@ void Plot(RooRealVar *mass, RooDataSet* genDat, RooAddPdf sigAndBkg, RooGenericP
 
 void Plot(RooRealVar *mass, RooDataSet* genDat, RooGenericPdf genFitFcn, int MCmass, int cat, int toy, string fitFuncName, string genFuncName){
  
+  system("mkdir -p Newplots/Fits");
   // set up sidebands
   double lowBand = 0.93*double(MCmass);
   double highBand = 1.07*double(MCmass);
@@ -238,7 +238,7 @@ void Plot(RooRealVar *mass, RooDataSet* genDat, RooGenericPdf genFitFcn, int MCm
   genDat->plotOn(gFrame,DataError(RooDataSet::SumW2));
   genFitFcn.plotOn(gFrame,Range("lowband","highband"),NormRange("wholeRange"));
   gFrame->Draw();
-  canv->Print(Form("plots/%s/%s/bdtGen_%s_fit_%s_m%d_cat%d_toy%d.pdf",fitFuncName.c_str(),genFuncName.c_str(),fitFuncName.c_str(),genFuncName.c_str(),MCmass,cat,toy),"pdf");
+  canv->Print(Form("Newplots/%s/%s/bdtGen_%s_fit_%s_m%d_cat%d_toy%d.png",fitFuncName.c_str(),genFuncName.c_str(),fitFuncName.c_str(),genFuncName.c_str(),MCmass,cat,toy),"png");
   canv->Clear();
 
   delete canv;
@@ -248,7 +248,7 @@ void histPlot(TH1F *hist, string fitFuncName, string genFuncName){
 
   TCanvas *canv = new TCanvas();
   hist->Draw();
-  canv->Print(Form("plots/%s/%s/%s.pdf",fitFuncName.c_str(),genFuncName.c_str(),hist->GetName()),"pdf");
+  canv->Print(Form("Newplots/%s/%s/%s.png",fitFuncName.c_str(),genFuncName.c_str(),hist->GetName()),"png");
   delete canv;
 }
 void histPlot(TH2F *hist, string fitFuncName, string genFuncName){
@@ -256,7 +256,7 @@ void histPlot(TH2F *hist, string fitFuncName, string genFuncName){
   gStyle->SetPalette(1);
   TCanvas *canv = new TCanvas();
   hist->Draw("colz");
-  canv->Print(Form("plots/%s/%s/%s.pdf",fitFuncName.c_str(),genFuncName.c_str(),hist->GetName()),"pdf");
+  canv->Print(Form("Newplots/%s/%s/%s.png",fitFuncName.c_str(),genFuncName.c_str(),hist->GetName()),"png");
   delete canv;
 }
 
@@ -292,8 +292,8 @@ int main(int argc, char* argv[]){
 
   for (int n1=0; n1<12; n1++){
     for (int n2=0; n2<12; n2++){
-      system(("mkdir -p plots/"+fcnNames[n1]+"/"+fcnNames[n2]).c_str());
-      system(("mkdir -p fitFiles/"+fcnNames[n1]+"/"+fcnNames[n2]).c_str());
+      system(("mkdir -p Newplots/"+fcnNames[n1]+"/"+fcnNames[n2]).c_str());
+      system(("mkdir -p NewFitFiles/"+fcnNames[n1]+"/"+fcnNames[n2]).c_str());
     }
   }
   // ---------------- setup ------------------------
@@ -315,7 +315,7 @@ int main(int argc, char* argv[]){
     const int nToys = atoi(argv[2]);
     const int cat = atoi(argv[3]);
     const int itFits = atoi(argv[4]);
-    TFile *fitFile = new TFile(Form("fitFiles/FitAndToys_%s_cat%d.root",fcnNames[itFits].c_str(),cat),"RECREATE");
+    TFile *fitFile = new TFile(Form("NewFitFiles/FitAndToys_%s_cat%d.root",fcnNames[itFits].c_str(),cat),"RECREATE");
     RooWorkspace *fitWS = new RooWorkspace("cms-hgg-fits");
     fitWS->import(*mass);
 
@@ -349,15 +349,15 @@ int main(int argc, char* argv[]){
     string genFunc(argv[3]);
     checkInput(fitFunc);
     checkInput(genFunc);
-    ofstream diagFile("diags.txt");
-    ofstream fitResFile("fitResults.txt");
     const int nToys=atoi(argv[4]);
     const int cat=atoi(argv[5]) ;
     const int nMasses=9;
     const int mRlow=atoi(argv[6]);
     const int mRhigh=atoi(argv[7]);
     const int sigOption=atoi(argv[8]);
-    TFile *outFile = new TFile(Form("fitFiles/BkgSystOut_%s_%s_cat%d.root",fitFunc.c_str(),genFunc.c_str(),cat),"RECREATE");
+    ofstream diagFile(Form("Newplots/%s/%s/diags_cat%d.txt",fitFunc.c_str(),genFunc.c_str(),cat));
+    ofstream fitResFile(Form("NewFitFiles/fitResults_%s_%s_cat%d.txt",fitFunc.c_str(),genFunc.c_str(),cat));
+    TFile *outFile = new TFile(Form("NewFitFiles/BkgSystOut_%s_%s_cat%d.root",fitFunc.c_str(),genFunc.c_str(),cat),"RECREATE");
     cout << "Running " << nToys << " toys over in category" << cat+1 << " around " << fitFunc << " fit to data and fitting this with " << genFunc << endl;
     cout << "Signal mass range = [" << mRlow << "-" << mRhigh << "]" << endl;
     diagFile << setw(6) << "Mass" << setw(6) << "Cat" << setw(10) << "datNevt" << setw(10) << "datFitInt" << setw(10) << "genNevt" << setw(10) << "sandBFitInt" << setw(10) << "winBkgDat" << setw(10) << "winSandBGen" << setw(10) << "winBkgGen" << setw(10) << "winSigGen" << setw(10) << "bkgDiff" << endl;
@@ -426,11 +426,6 @@ int main(int argc, char* argv[]){
           RooAbsReal* wholeInt_dataFitFcn = dataFitFcn->createIntegral(*mass,NormSet(*mass),Range("wholeRange"));
           double bkgIntegral = wholeInt_dataFitFcn->getVal()*hMassData->numEntries();
           
-          // let signal go pos and neg
-          double sigYieldMin;
-          if (sigOption==0) sigYieldMin==-50;
-          if (sigOption==1) sigYieldMin==0;
-
           if (sigOption==0 || sigOption==1){
             // get signal MC histo
             RooDataHist *sigMCHist = (RooDataHist*)dataWS->data(Form("roohist_sig_mass_m%d_cat%d",mMC,cat));
@@ -438,9 +433,13 @@ int main(int argc, char* argv[]){
             // get background func
             RooGenericPdf genFitFcn = getFunction(genFunc); //getPow(0);
             // --- contruct s+b model and fit allowing signal to go negative
-            RooRealVar bkgYield("nBkg","nBkg",2000.,1000.,2500.);
-            RooRealVar sigYield("nSig","nSig",0.,sigYieldMin,50.);
-            RooAddPdf sigAndBkg(Form("sigAndBkg%d",mMC),Form("sigAndBkg%d",mMC),RooArgList(genFitFcn,sigMC),RooArgList(bkgYield,sigYield));
+            RooRealVar bkgYield("nBkg","nBkg",1001.,500.,2500.);
+            // let signal go pos and neg
+            double sigYieldMin;
+            if (sigOption==0) sigYieldMin==-50;
+            if (sigOption==1) sigYieldMin==0;
+            RooRealVar sigYield("nSig","nSig",0.01,sigYieldMin,50.);
+            RooAddPdf sigAndBkg(Form("sigAndBkg%d_toy%d",mMC,itToy),Form("sigAndBkg%d_toy%d",mMC,itToy),RooArgList(genFitFcn,sigMC),RooArgList(bkgYield,sigYield));
             sigAndBkg.fitTo(*genDat,PrintLevel(-1),PrintEvalErrors(-1));
             compWS->import(sigAndBkg);
             RooDataHist *dh = genDat->binnedClone();
